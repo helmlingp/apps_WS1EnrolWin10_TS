@@ -21,14 +21,10 @@ if($PSScriptRoot -eq ""){
 } 
 
 # Script Vars
-<# $DestinationURL = "ENROLLMENT_URL"
+$DestinationURL = "ENROLLMENT_URL"
 $DestinationOGName = "ENROLLMENT_OG_ID"
 $Username = "PROMPTED_USERNAME"
-$Password = "PROMPTED_PASSWORD" #>
-$DestinationURL = "https://start.auspost.com.au"
-$DestinationOGName = "apcorp"
-$Username = "StagingAustraliaPost"
-$Password = "y:M3O_"
+$Password = "PROMPTED_PASSWORD"
 
 function Get-EnrollmentStatus {
     $output = $true;
