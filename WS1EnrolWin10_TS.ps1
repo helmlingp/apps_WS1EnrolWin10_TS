@@ -27,15 +27,12 @@ $Username = "PROMPTED_USERNAME"
 $Password = "PROMPTED_PASSWORD"
 
 function Get-EnrollmentStatus {
-    $output = $true;
 
-    $OMADMPath = "HKLM:\SOFTWARE\Microsoft\Provisioning\OMADM\Accounts\*"
-    $Account = (Get-ItemProperty -Path $OMADMPath -ErrorAction SilentlyContinue).PSChildname
+    $EnrollmentStatus = (Get-ItemProperty -Path HKLM:\SOFTWARE\AIRWATCH\EnrollmentStatus -ErrorAction SilentlyContinue).status
 
-    $EnrollmentPath = "HKLM:\SOFTWARE\Microsoft\Enrollments\$Account"
-    $EnrollmentUPN = (Get-ItemProperty -Path $EnrollmentPath -ErrorAction SilentlyContinue).UPN
-
-    if($null -eq $EnrollmentUPN) {
+    if(EnrollmentStatus -eq 'Completed') {
+        $output = $true
+    } else {
         $output = $false
     }
 
@@ -45,7 +42,7 @@ function Get-EnrollmentStatus {
 Function Enroll-Device {
     Write-host "Enrolling device into $DestinationURL"
     Try {
-        Start-Process msiexec.exe -Wait -ArgumentList "/i $current_path\AirwatchAgent.msi /quiet /log $current_path\AWAgent.log ENROLL=Y  DOWNLOADWSBUNDLE=false IMAGE=N SERVER=$DestinationURL LGNAME=$DestinationOGName USERNAME=$Username PASSWORD=$Password"
+        Start-Process msiexec.exe -Wait -ArgumentList "/i $current_path\AirwatchAgent.msi /qn ENROLL=Y  DOWNLOADWSBUNDLE=false IMAGE=N SERVER=$DestinationURL LGNAME=$DestinationOGName USERNAME=$Username PASSWORD=$Password"
 	} catch {
         Write-host $_.Exception
 	}
@@ -56,11 +53,13 @@ $connectionStatus = Test-Connection -ComputerName $DestinationURL -Quiet
 if($connectionStatus -eq $true) {
     Write-host "Device has connectivity to the Destination Server"
     $enrolled = Get-EnrollmentStatus
+
     if($enrolled -eq $false) {
         Write-host "Running Enrollment process"
-    
-        Start-Sleep -Seconds 1
         Enroll-Device
+
+        Start-Sleep -Seconds 1
+        
         while($enrolled -eq $false) {
             $status = Get-EnrollmentStatus
             if($status -eq $true) {
